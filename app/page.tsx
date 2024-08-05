@@ -1,28 +1,37 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 
 const Home = () => {
   const searchParams = useSearchParams();
-  const key = searchParams.get("key") || Cookies.get("key");
+  const [key, setKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchKey = async () => {
+      const keyFromUrl = searchParams.get("key");
+      if (keyFromUrl) {
+        setKey(keyFromUrl);
+        Cookies.set("key", keyFromUrl);
+      } else {
+        const keyFromCookie = Cookies.get("key");
+        if (keyFromCookie) {
+          setKey(keyFromCookie);
+        }
+      }
+    };
+
+    fetchKey();
+  }, [searchParams]);
 
   useEffect(() => {
     if (key) {
-      Cookies.set("key", key);
-      const socket = new WebSocket("ws://localhost:3000");
+      const socket = new WebSocket(`ws://localhost:3000?key=${key}`);
 
       socket.onopen = () => {
         console.log("WebSocket connection established");
-        socket.send(key);
       };
-
-      const interval = setInterval(() => {
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(key);
-        }
-      }, 5000);
 
       socket.onmessage = event => {
         console.log("Received:", event.data);
@@ -31,6 +40,12 @@ const Home = () => {
       socket.onerror = error => {
         console.error("WebSocket error:", error);
       };
+
+      const interval = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(key);
+        }
+      }, 5000);
 
       return () => {
         clearInterval(interval);
@@ -45,7 +60,7 @@ const Home = () => {
 
   return (
     <div>
-      <h1>Welcome to the protected page!</h1>
+      <h1>Welcome to the protected page, Friend Lee!</h1>
     </div>
   );
 };
