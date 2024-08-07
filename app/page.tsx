@@ -60,7 +60,7 @@ const Home = () => {
 
   return (
     <div>
-      <h1>Welcome to the protected page, Friend Lee!</h1>
+      <h1>Welcome, Friend Lee!!!</h1>
     </div>
   );
 };
